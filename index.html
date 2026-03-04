@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StockSim – Wirtschaftssimulator</title>
+  <style>
+    /* ── Reset & Variables ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #252836;
+      --border:    #2e3245;
+      --accent:    #5c6ef8;
+      --accent-h:  #7b8bff;
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --text:      #e2e8f0;
+      --muted:     #8892a4;
+      --radius:    12px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .header-stat label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      display: block;
+    }
+
+    .header-stat span {
+      font-size: .95rem;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .header-stats { display: none; }
+    }
+
+    /* ── Cards ──────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+
+    .card-title {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── Summary row ────────────────────────────────────────────── */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 600px) { .summary-row { grid-template-columns: 1fr 1fr; } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .stat-card .label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .stat-card .sub {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Stock table ────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      cursor: pointer;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+
+    td {
+      padding: 12px 12px;
+      vertical-align: middle;
+    }
+
+    .stock-name { font-weight: 600; }
+    .stock-ticker {
+      display: inline-block;
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--accent-h);
+      margin-left: 6px;
+    }
+
+    .price { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .change {
+      font-size: .83rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .up   { color: var(--green); }
+    .down { color: var(--red); }
+    .flat { color: var(--muted); }
+
+    /* sparkline */
+    .spark { vertical-align: middle; }
+
+    /* owned badge */
+    .owned-badge {
+      background: rgba(92,110,248,.18);
+      color: var(--accent-h);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    /* action buttons */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter .15s, transform .1s;
+    }
+
+    .btn:active { transform: scale(.96); }
+
+    .btn-buy  { background: var(--green);  color: #fff; }
+    .btn-sell { background: var(--red);    color: #fff; }
+    .btn-buy:hover  { filter: brightness(1.12); }
+    .btn-sell:hover { filter: brightness(1.12); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 24px;
+      font-size: .9rem;
+      border-radius: 10px;
+    }
+
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      padding: 10px 20px;
+      font-size: .9rem;
+      border-radius: 10px;
+    }
+
+    .btn-ghost:hover { background: var(--border); }
+
+    /* ── Sidebar ────────────────────────────────────────────────── */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+    /* Portfolio holdings */
+    .holding-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .holding-item:last-child { border-bottom: none; }
+
+    .holding-name { font-weight: 600; font-size: .88rem; }
+    .holding-qty  { font-size: .75rem; color: var(--muted); }
+
+    .holding-val  { text-align: right; }
+    .holding-val .amount { font-weight: 700; font-size: .9rem; }
+    .holding-val .pnl    { font-size: .75rem; }
+
+    /* Transaction history */
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .83rem;
+    }
+
+    .tx-item:last-child { border-bottom: none; }
+
+    .tx-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: .72rem;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    .tx-buy  { background: rgba(34,197,94,.18);  color: var(--green); }
+    .tx-sell { background: rgba(239,68,68,.18);  color: var(--red); }
+
+    .tx-right { text-align: right; color: var(--muted); font-size: .75rem; }
+
+    /* empty state */
+    .empty {
+      text-align: center;
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    /* ── Modal ──────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 380px;
+      max-width: 95vw;
+      box-shadow: var(--shadow);
+      animation: pop .18s ease;
+    }
+
+    @keyframes pop {
+      from { transform: scale(.93); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .modal h2 {
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+
+    .modal .modal-sub {
+      color: var(--muted);
+      font-size: .82rem;
+      margin-bottom: 20px;
+    }
+
+    .modal-price-row {
+      display: flex;
+      justify-content: space-between;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+    }
+
+    .modal-price-row .key { color: var(--muted); font-size: .82rem; }
+    .modal-price-row .val { font-weight: 700; font-size: .95rem; }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .form-group input:focus { border-color: var(--accent); }
+
+    .modal-total {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: .88rem;
+    }
+
+    .modal-total .key { color: var(--muted); }
+    .modal-total .val { font-weight: 700; font-size: 1.05rem; }
+
+    .modal-error {
+      color: var(--red);
+      font-size: .8rem;
+      margin-bottom: 12px;
+      min-height: 1.2em;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-actions .btn { flex: 1; text-align: center; }
+
+    /* ── Toast ──────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: .88rem;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 300;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Ticker bar ─────────────────────────────────────────────── */
+    .ticker-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ticker-inner {
+      display: flex;
+      gap: 36px;
+      animation: scroll-left 28s linear infinite;
+      width: max-content;
+    }
+
+    @keyframes scroll-left {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+      font-size: .8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .ticker-item .t-sym { color: var(--muted); margin-right: 4px; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">📈</div>
+    StockSim
+  </div>
+  <div class="header-stats">
+    <div class="header-stat">
+      <label>Guthaben</label>
+      <span id="hdr-cash">–</span>
+    </div>
+    <div class="header-stat">
+      <label>Portfolio-Wert</label>
+      <span id="hdr-port">–</span>
+    </div>
+    <div class="header-stat">
+      <label>Gesamt</label>
+      <span id="hdr-total">–</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Ticker bar ───────────────────────────────────────────────── -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- LEFT column -->
+  <div>
+    <!-- Summary stats -->
+    <div class="summary-row">
+      <div class="stat-card">
+        <div class="label">💰 Guthaben</div>
+        <div class="value" id="stat-cash">–</div>
+        <div class="sub">Verfügbares Kapital</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">📊 Portfolio-Wert</div>
+        <div class="value" id="stat-port">–</div>
+        <div class="sub" id="stat-port-sub">–</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">💼 Gesamtvermögen</div>
+        <div class="value" id="stat-total">–</div>
+        <div class="sub" id="stat-total-sub">–</div>
+      </div>
+    </div>
+
+    <!-- Stock list -->
+    <div class="card">
+      <div class="card-title">Aktienmärkte</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unternehmen</th>
+              <th>Kurs</th>
+              <th>Änderung</th>
+              <th>Chart</th>
+              <th>Im Besitz</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="stock-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT sidebar -->
+  <div class="sidebar">
+
+    <!-- Portfolio holdings -->
+    <div class="card">
+      <div class="card-title">Mein Portfolio</div>
+      <div id="holdings-list"><div class="empty">Noch keine Aktien im Besitz</div></div>
+    </div>
+
+    <!-- Transaction log -->
+    <div class="card">
+      <div class="card-title">Transaktionen</div>
+      <div id="tx-list"><div class="empty">Noch keine Transaktionen</div></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Buy/Sell Modal ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Aktie kaufen</h2>
+    <div class="modal-sub" id="modal-sub">–</div>
+
+    <div class="modal-price-row">
+      <div><div class="key">Aktueller Kurs</div><div class="val" id="modal-price">–</div></div>
+      <div><div class="key">Verfügbares Kapital</div><div class="val" id="modal-cash">–</div></div>
+    </div>
+
+    <div class="form-group">
+      <label>Anzahl Aktien</label>
+      <input type="number" id="qty-input" min="1" step="1" value="1" placeholder="z. B. 5" />
+    </div>
+
+    <div class="modal-total">
+      <span class="key">Gesamtbetrag</span>
+      <span class="val" id="modal-total">–</span>
+    </div>
+
+    <div class="modal-error" id="modal-error"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" id="modal-confirm" onclick="confirmOrder()">Kaufen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── Script ───────────────────────────────────────────────────── -->
+<script>
+// ── Initial Data ────────────────────────────────────────────────
+
+const STOCKS = [
+  { id: 'aapl',  name: 'Apple Inc.',          ticker: 'AAPL', price: 185.20, sector: 'Tech' },
+  { id: 'msft',  name: 'Microsoft Corp.',     ticker: 'MSFT', price: 415.80, sector: 'Tech' },
+  { id: 'googl', name: 'Alphabet Inc.',       ticker: 'GOOGL',price: 172.50, sector: 'Tech' },
+  { id: 'amzn',  name: 'Amazon.com Inc.',     ticker: 'AMZN', price: 198.90, sector: 'E-Commerce' },
+  { id: 'tsla',  name: 'Tesla Inc.',          ticker: 'TSLA', price: 248.40, sector: 'Auto' },
+  { id: 'nvda',  name: 'NVIDIA Corp.',        ticker: 'NVDA', price: 875.60, sector: 'Tech' },
+  { id: 'meta',  name: 'Meta Platforms',      ticker: 'META', price: 520.30, sector: 'Social' },
+  { id: 'brk',   name: 'Berkshire Hathaway',  ticker: 'BRK',  price: 612.00, sector: 'Finance' },
+  { id: 'jnj',   name: 'Johnson & Johnson',   ticker: 'JNJ',  price:  157.90, sector: 'Health' },
+  { id: 'sap',   name: 'SAP SE',              ticker: 'SAP',  price: 192.40, sector: 'Tech' },
+];
+
+const STARTING_CASH = 10000;
+const HISTORY_LEN   = 30;   // sparkline data points
+const UPDATE_MS     = 2000; // price update interval
+
+// ── State ───────────────────────────────────────────────────────
+
+let cash = STARTING_CASH;
+let portfolio = {};      // { id: { qty, avgBuy } }
+let transactions = [];   // [ { type, id, qty, price, ts } ]
+
+// price history per stock (ring buffer)
+let priceHistory = {};
+STOCKS.forEach(s => {
+  priceHistory[s.id] = Array(HISTORY_LEN).fill(s.price);
+});
+
+// modal state
+let modalStock  = null;
+let modalIsBuy  = true;
+
+// ── Helpers ─────────────────────────────────────────────────────
+
+function fmt(n) {
+  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+function fmtShort(n) {
+  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function pct(current, base) {
+  if (!base) return 0;
+  return ((current - base) / base) * 100;
+}
+
+function pctStr(v) {
+  const sign = v >= 0 ? '+' : '';
+  return sign + v.toFixed(2) + '%';
+}
+
+function portfolioValue() {
+  return STOCKS.reduce((sum, s) => {
+    const h = portfolio[s.id];
+    return sum + (h ? h.qty * s.price : 0);
+  }, 0);
+}
+
+// ── Sparkline ───────────────────────────────────────────────────
+
+function drawSparkline(canvas, history, color) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const min = Math.min(...history);
+  const max = Math.max(...history);
+  const range = max - min || 1;
+  ctx.beginPath();
+  history.forEach((v, i) => {
+    const x = (i / (history.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+}
+
+// ── Render ──────────────────────────────────────────────────────
+
+function renderTable() {
+  const tbody = document.getElementById('stock-tbody');
+  tbody.innerHTML = '';
+  STOCKS.forEach(s => {
+    const hist = priceHistory[s.id];
+    const prev  = hist[hist.length - 2];
+    const chg   = s.price - prev;
+    const chgP  = pct(s.price, prev);
+    const clsChg = chg > 0 ? 'up' : chg < 0 ? 'down' : 'flat';
+    const arrow  = chg > 0 ? '▲' : chg < 0 ? '▼' : '–';
+    const sparkColor = chg >= 0 ? '#22c55e' : '#ef4444';
+
+    const held = portfolio[s.id];
+    const ownedBadge = held
+      ? `<span class="owned-badge">${held.qty} Stk.</span>`
+      : '<span style="color:var(--muted);font-size:.8rem">–</span>';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <span class="stock-name">${s.name}</span>
+        <span class="stock-ticker">${s.ticker}</span>
+      </td>
+      <td class="price">${fmt(s.price)}</td>
+      <td class="change ${clsChg}">${chg === 0 ? '–' : arrow + ' ' + pctStr(chgP)}</td>
+      <td><canvas class="spark" width="72" height="28" data-id="${s.id}" data-color="${sparkColor}"></canvas></td>
+      <td>${ownedBadge}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-buy"  onclick="openModal('${s.id}',true)"  >Kaufen</button>
+        ${held ? `<button class="btn btn-sell" onclick="openModal('${s.id}',false)" style="margin-left:6px">Verkaufen</button>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    const canvas = tr.querySelector(`canvas[data-id="${s.id}"]`);
+    drawSparkline(canvas, hist, sparkColor);
+  });
+}
+
+function renderSummary() {
+  const pv    = portfolioValue();
+  const total = cash + pv;
+  const gainP = pct(total, STARTING_CASH);
+
+  document.getElementById('stat-cash').textContent  = fmt(cash);
+  document.getElementById('stat-port').textContent  = fmt(pv);
+  document.getElementById('stat-total').textContent = fmt(total);
+
+  document.getElementById('stat-port-sub').textContent  = pv > 0
+    ? `${pctStr(pct(pv, STARTING_CASH - cash))} seit Kauf` : 'Kein Investment';
+  document.getElementById('stat-total-sub').innerHTML = `<span class="${gainP >= 0 ? 'up' : 'down'}">${pctStr(gainP)} seit Start</span>`;
+
+  // header
+  document.getElementById('hdr-cash').textContent  = fmt(cash);
+  document.getElementById('hdr-port').textContent  = fmt(pv);
+  const totalEl = document.getElementById('hdr-total');
+  totalEl.textContent = fmt(total);
+  totalEl.className   = gainP >= 0 ? 'up' : 'down';
+}
+
+function renderHoldings() {
+  const el = document.getElementById('holdings-list');
+  const held = STOCKS.filter(s => portfolio[s.id]);
+  if (!held.length) { el.innerHTML = '<div class="empty">Noch keine Aktien im Besitz</div>'; return; }
+
+  el.innerHTML = held.map(s => {
+    const h = portfolio[s.id];
+    const val  = h.qty * s.price;
+    const cost = h.qty * h.avgBuy;
+    const g    = val - cost;
+    const gP   = pct(val, cost);
+    return `
+      <div class="holding-item">
+        <div>
+          <div class="holding-name">${s.ticker}</div>
+          <div class="holding-qty">${h.qty} Aktien · ⌀ ${fmt(h.avgBuy)}</div>
+        </div>
+        <div class="holding-val">
+          <div class="amount">${fmt(val)}</div>
+          <div class="pnl ${g >= 0 ? 'up' : 'down'}">${g >= 0 ? '+' : ''}${fmtShort(g)} € (${pctStr(gP)})</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderTransactions() {
+  const el = document.getElementById('tx-list');
+  if (!transactions.length) { el.innerHTML = '<div class="empty">Noch keine Transaktionen</div>'; return; }
+
+  el.innerHTML = transactions.slice().reverse().slice(0, 20).map(t => {
+    const s = STOCKS.find(x => x.id === t.id);
+    const total = t.qty * t.price;
+    const d = new Date(t.ts);
+    const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `
+      <div class="tx-item">
+        <div>
+          <span class="tx-type tx-${t.type}">${t.type === 'buy' ? 'KAUF' : 'VERKAUF'}</span>
+          ${s.ticker} &times; ${t.qty}
+        </div>
+        <div class="tx-right">
+          <div>${fmt(total)}</div>
+          <div>${time}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderSummary();
+  renderTable();
+  renderHoldings();
+  renderTransactions();
+  renderTicker();
+}
+
+// ── Ticker ──────────────────────────────────────────────────────
+
+function renderTicker() {
+  const items = STOCKS.map(s => {
+    const hist = priceHistory[s.id];
+    const prev = hist[hist.length - 2];
+    const chgP = pct(s.price, prev);
+    const cls  = chgP >= 0 ? 'up' : 'down';
+    const arrow = chgP > 0 ? '▲' : chgP < 0 ? '▼' : '–';
+    const chgDisp = chgP === 0 ? `${fmtShort(s.price)} €` : `${arrow} ${fmtShort(s.price)} € (${pctStr(chgP)})`;
+    return `<span class="ticker-item"><span class="t-sym">${s.ticker}</span><span class="${cls}">${chgDisp}</span></span>`;
+  }).join('');
+  // duplicate for seamless loop
+  document.getElementById('ticker').innerHTML = items + items;
+}
+
+// ── Price simulation ─────────────────────────────────────────────
+
+function simulatePrices() {
+  STOCKS.forEach(s => {
+    // Random walk with slight drift toward initial price
+    const drift    = (s.price - priceHistory[s.id][0]) * -0.002;
+    const volatility = s.price * 0.008;
+    const change   = drift + (Math.random() - 0.5) * volatility * 2;
+    s.price = Math.max(1, s.price + change);
+    priceHistory[s.id].push(s.price);
+    priceHistory[s.id].shift();
+  });
+  renderAll();
+}
+
+// ── Modal ───────────────────────────────────────────────────────
+
+function openModal(id, isBuy) {
+  modalStock = STOCKS.find(s => s.id === id);
+  modalIsBuy = isBuy;
+
+  document.getElementById('modal-title').textContent =
+    isBuy ? `${modalStock.name} kaufen` : `${modalStock.name} verkaufen`;
+  document.getElementById('modal-sub').textContent =
+    `${modalStock.ticker} · ${modalStock.sector}`;
+  document.getElementById('modal-price').textContent  = fmt(modalStock.price);
+  document.getElementById('modal-cash').textContent   = fmt(cash);
+  document.getElementById('modal-confirm').textContent = isBuy ? 'Kaufen' : 'Verkaufen';
+  document.getElementById('modal-confirm').className  =
+    `btn ${isBuy ? 'btn-primary' : 'btn-sell'}`;
+
+  const qtyInput = document.getElementById('qty-input');
+  qtyInput.value = '1';
+  if (!isBuy) {
+    const held = portfolio[id];
+    qtyInput.max = held ? held.qty : 0;
+  } else {
+    qtyInput.removeAttribute('max');
+  }
+
+  document.getElementById('modal-error').textContent = '';
+  updateModalTotal();
+
+  document.getElementById('modal-overlay').classList.add('open');
+  qtyInput.focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  modalStock = null;
+}
+
+function updateModalTotal() {
+  if (!modalStock) return;
+  const qty = parseInt(document.getElementById('qty-input').value) || 0;
+  const total = qty * modalStock.price;
+  document.getElementById('modal-total').textContent = fmt(total);
+}
+
+document.getElementById('qty-input').addEventListener('input', updateModalTotal);
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function confirmOrder() {
+  const qty = parseInt(document.getElementById('qty-input').value);
+  const errEl = document.getElementById('modal-error');
+
+  if (!qty || qty < 1) { errEl.textContent = 'Bitte gib eine gültige Anzahl ein.'; return; }
+
+  const total = qty * modalStock.price;
+
+  if (modalIsBuy) {
+    if (total > cash) { errEl.textContent = 'Nicht genug Kapital für diesen Kauf.'; return; }
+    cash -= total;
+    if (!portfolio[modalStock.id]) {
+      portfolio[modalStock.id] = { qty: 0, avgBuy: 0 };
+    }
+    const h = portfolio[modalStock.id];
+    h.avgBuy = (h.avgBuy * h.qty + modalStock.price * qty) / (h.qty + qty);
+    h.qty += qty;
+  } else {
+    const h = portfolio[modalStock.id];
+    if (!h || h.qty < qty) { errEl.textContent = 'Du besitzt nicht genug Aktien.'; return; }
+    h.qty -= qty;
+    cash  += total;
+    if (h.qty === 0) delete portfolio[modalStock.id];
+  }
+
+  transactions.push({
+    type:  modalIsBuy ? 'buy' : 'sell',
+    id:    modalStock.id,
+    qty,
+    price: modalStock.price,
+    ts:    Date.now(),
+  });
+
+  showToast(modalIsBuy
+    ? `✅ ${qty} × ${modalStock.ticker} für ${fmt(total)} gekauft`
+    : `💰 ${qty} × ${modalStock.ticker} für ${fmt(total)} verkauft`);
+
+  closeModal();
+  renderAll();
+}
+
+// ── Toast ───────────────────────────────────────────────────────
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Keyboard shortcut ────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) confirmOrder();
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+
+renderAll();
+setInterval(simulatePrices, UPDATE_MS);
+</script>
+</body>
+</html>
