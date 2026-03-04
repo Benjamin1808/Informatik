@@ -1,0 +1,435 @@
+/* ============================================================
+   style.css – Aktienhandel Simulator
+   Dunkles Finanz-Theme, responsives Layout
+   ============================================================ */
+
+/* --- Grundlegendes Reset & Schriftart --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-main:      #0d1117;
+  --bg-card:      #161b22;
+  --bg-card2:     #1c2230;
+  --border:       #30363d;
+  --accent:       #58a6ff;
+  --accent-hover: #79baff;
+  --green:        #3fb950;
+  --red:          #f85149;
+  --text:         #e6edf3;
+  --text-muted:   #8b949e;
+  --btn-buy:      #238636;
+  --btn-buy-hov:  #2ea043;
+  --btn-sell:     #b62324;
+  --btn-sell-hov: #da3633;
+  --radius:       8px;
+  --shadow:       0 4px 16px rgba(0,0,0,.45);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-main);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- HEADER --- */
+header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  font-size: 1.4rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.header-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.stat-box {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 130px;
+}
+
+.stat-label {
+  font-size: .72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* --- MAIN --- */
+main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+}
+
+.section h2 {
+  font-size: 1rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 16px;
+}
+
+/* --- AKTIENTABELLE --- */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+}
+
+thead th {
+  text-align: left;
+  padding: 10px 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: var(--bg-card2);
+}
+
+tbody td {
+  padding: 12px 12px;
+  vertical-align: middle;
+}
+
+.aktie-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.aktie-symbol {
+  font-size: .78rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.kurs {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.aenderung {
+  font-weight: 600;
+  font-size: .88rem;
+}
+
+.aenderung.positiv { color: var(--green); }
+.aenderung.negativ { color: var(--red); }
+
+.besitz {
+  color: var(--text-muted);
+  font-size: .88rem;
+}
+
+/* Mengen-Input in der Tabelle */
+.menge-input {
+  width: 70px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 5px 8px;
+  font-size: .9rem;
+  text-align: center;
+}
+
+.menge-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Buttons */
+.aktions-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-kauf, .btn-verkauf {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 600;
+  transition: background .15s, transform .1s;
+}
+
+.btn-kauf {
+  background: var(--btn-buy);
+  color: #fff;
+}
+
+.btn-kauf:hover {
+  background: var(--btn-buy-hov);
+}
+
+.btn-verkauf {
+  background: var(--btn-sell);
+  color: #fff;
+}
+
+.btn-verkauf:hover {
+  background: var(--btn-sell-hov);
+}
+
+.btn-kauf:active, .btn-verkauf:active {
+  transform: scale(.96);
+}
+
+/* Sekundär-Button */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 7px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: .85rem;
+  transition: border-color .15s, color .15s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* --- MITTLERER GRID --- */
+.middle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
+}
+
+/* --- PORTFOLIO --- */
+.portfolio-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.portfolio-item:last-child {
+  border-bottom: none;
+}
+
+.portfolio-name {
+  font-weight: 600;
+}
+
+.portfolio-anzahl {
+  font-size: .82rem;
+  color: var(--text-muted);
+}
+
+.portfolio-wert {
+  font-weight: 700;
+  text-align: right;
+}
+
+.portfolio-pnl {
+  font-size: .8rem;
+  text-align: right;
+}
+
+.portfolio-pnl.positiv { color: var(--green); }
+.portfolio-pnl.negativ { color: var(--red); }
+
+/* --- CHART --- */
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: .88rem;
+  color: var(--text-muted);
+}
+
+#chart-auswahl {
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: .88rem;
+  cursor: pointer;
+}
+
+#chart-auswahl:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#kurs-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  background: var(--bg-main);
+}
+
+/* --- TRANSAKTIONSLOG --- */
+#log-inhalt {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: .88rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log-eintrag {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 5px;
+  background: var(--bg-card2);
+  border-left: 3px solid transparent;
+  font-size: .85rem;
+}
+
+.log-eintrag.kauf {
+  border-left-color: var(--green);
+}
+
+.log-eintrag.verkauf {
+  border-left-color: var(--red);
+}
+
+.log-zeit {
+  color: var(--text-muted);
+  font-size: .78rem;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+/* --- ALLGEMEIN --- */
+.leer-text {
+  color: var(--text-muted);
+  font-size: .88rem;
+  font-style: italic;
+}
+
+/* Gewinn/Verlust Farben im Header */
+.positiv { color: var(--green); }
+.negativ { color: var(--red); }
+
+/* --- FOOTER --- */
+footer {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 14px;
+  font-size: .82rem;
+  color: var(--text-muted);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 860px) {
+  .middle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .stat-box {
+    min-width: 0;
+    flex: 1;
+    padding: 6px 8px;
+  }
+
+  .stat-value {
+    font-size: .95rem;
+  }
+
+  main {
+    padding: 12px 10px;
+  }
+
+  .section {
+    padding: 14px 12px;
+  }
+}

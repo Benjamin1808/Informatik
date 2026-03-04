@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aktienhandel Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <div class="header-inner">
+      <h1>📈 Aktienhandel Simulator</h1>
+      <div class="header-stats">
+        <div class="stat-box">
+          <span class="stat-label">Guthaben</span>
+          <span class="stat-value" id="guthaben">100,00 €</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Gesamtwert</span>
+          <span class="stat-value" id="gesamtwert">100,00 €</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Gewinn/Verlust</span>
+          <span class="stat-value" id="gewinnverlust">0,00 €</span>
+        </div>
+      </div>
+      <div class="header-buttons">
+        <button id="btn-reset" class="btn-secondary">🔄 Neu starten</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HAUPTINHALT ===== -->
+  <main>
+
+    <!-- Aktientabelle -->
+    <section class="section">
+      <h2>Aktienmärkte</h2>
+      <div class="table-wrapper">
+        <table id="aktien-tabelle">
+          <thead>
+            <tr>
+              <th>Aktie</th>
+              <th>Kurs</th>
+              <th>Änderung</th>
+              <th>Im Besitz</th>
+              <th>Menge</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="aktien-body">
+            <!-- Wird per JavaScript befüllt -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Mittlerer Bereich: Portfolio + Chart -->
+    <div class="middle-grid">
+
+      <!-- Portfolio -->
+      <section class="section portfolio-section">
+        <h2>Mein Portfolio</h2>
+        <div id="portfolio-inhalt">
+          <p class="leer-text">Du besitzt noch keine Aktien.</p>
+        </div>
+      </section>
+
+      <!-- Kursdiagramm -->
+      <section class="section chart-section">
+        <h2>Kursverlauf</h2>
+        <div class="chart-controls">
+          <label for="chart-auswahl">Aktie wählen:</label>
+          <select id="chart-auswahl"></select>
+        </div>
+        <canvas id="kurs-chart" width="600" height="260"></canvas>
+      </section>
+
+    </div>
+
+    <!-- Transaktionslog -->
+    <section class="section">
+      <h2>Transaktionshistorie</h2>
+      <div id="log-inhalt">
+        <p class="leer-text">Noch keine Transaktionen.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <p>© Julian &amp; Benni · <span id="jahr"></span></p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
