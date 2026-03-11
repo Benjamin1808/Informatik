@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oktopus im Atlantik</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ocean-deep:  #020c1b;
+      --ocean-mid:   #0a1628;
+      --ocean-light: #112240;
+      --accent:      #64ffda;
+      --accent2:     #7b61ff;
+      --text:        #ccd6f6;
+      --text-dim:    #8892b0;
+      --card-bg:     rgba(17, 34, 64, 0.85);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: var(--ocean-deep);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    /* ─── Bubbles background ────────────────────────────── */
+    .bubbles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bubble {
+      position: absolute;
+      bottom: -10%;
+      border-radius: 50%;
+      background: rgba(100, 255, 218, 0.07);
+      animation: rise linear infinite;
+    }
+    @keyframes rise {
+      0%   { transform: translateY(0) scale(1);   opacity: 0.6; }
+      100% { transform: translateY(-110vh) scale(1.3); opacity: 0; }
+    }
+
+    /* ─── Navigation ────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(2, 12, 27, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(100, 255, 218, 0.08);
+    }
+    .nav-logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ─── Hero ───────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 70%, #0d2f4a 0%, var(--ocean-deep) 70%);
+    }
+
+    /* CSS Octopus Art */
+    .octopus-wrap {
+      position: relative;
+      margin-bottom: 3rem;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-18px); }
+    }
+    .octopus {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto;
+    }
+    .oct-head {
+      width: 130px;
+      height: 110px;
+      background: radial-gradient(circle at 40% 35%, #9b5de5 0%, #6a0dad 60%, #4a0080 100%);
+      border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 40px rgba(155, 93, 229, 0.5);
+    }
+    .oct-eye {
+      position: absolute;
+      width: 22px; height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      top: 35px;
+    }
+    .oct-eye::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .oct-eye.left  { left: 22px; }
+    .oct-eye.right { right: 22px; }
+    .oct-mouth {
+      position: absolute;
+      bottom: 22px; left: 50%;
+      transform: translateX(-50%);
+      width: 32px; height: 12px;
+      border-bottom: 3px solid rgba(255,255,255,0.4);
+      border-radius: 0 0 50% 50%;
+    }
+
+    /* Tentacles */
+    .tentacles {
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+      width: 150px;
+      justify-content: center;
+    }
+    .tentacle {
+      width: 14px;
+      height: 70px;
+      background: linear-gradient(180deg, #8b3ec4 0%, #6a0dad 100%);
+      border-radius: 0 0 40% 40%;
+      transform-origin: top center;
+      animation: wave var(--d) ease-in-out infinite alternate;
+    }
+    @keyframes wave {
+      from { transform: rotate(var(--r1)); }
+      to   { transform: rotate(var(--r2)); }
+    }
+    .tentacle:nth-child(1)  { --d:1.4s; --r1:-18deg; --r2:8deg;  }
+    .tentacle:nth-child(2)  { --d:1.8s; --r1:-10deg; --r2:15deg; }
+    .tentacle:nth-child(3)  { --d:1.2s; --r1:-8deg;  --r2:10deg; }
+    .tentacle:nth-child(4)  { --d:2.0s; --r1:-5deg;  --r2:20deg; }
+    .tentacle:nth-child(5)  { --d:1.6s; --r1:-20deg; --r2:5deg;  }
+    .tentacle:nth-child(6)  { --d:1.3s; --r1:-12deg; --r2:18deg; }
+    .tentacle:nth-child(7)  { --d:1.9s; --r1:-7deg;  --r2:12deg; }
+    .tentacle:nth-child(8)  { --d:1.5s; --r1:-22deg; --r2:3deg;  }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p.subtitle {
+      max-width: 580px;
+      color: var(--text-dim);
+      font-size: 1.15rem;
+      margin-bottom: 2.5rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 2.2rem;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+    }
+    .btn:hover {
+      background: var(--accent);
+      color: var(--ocean-deep);
+      box-shadow: 0 0 25px rgba(100, 255, 218, 0.35);
+    }
+
+    /* ─── Sections shared ───────────────────────────────── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 0.82rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.8rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+    }
+    .section-title span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section-body {
+      color: var(--text-dim);
+      max-width: 650px;
+      font-size: 1.05rem;
+    }
+    .divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      margin-bottom: 2rem;
+    }
+
+    /* ─── Facts grid ────────────────────────────────────── */
+    #fakten { background: var(--ocean-mid); }
+    .facts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .fact-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(100, 255, 218, 0.1);
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .fact-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(100, 255, 218, 0.35);
+      box-shadow: 0 12px 40px rgba(100, 255, 218, 0.08);
+    }
+    .fact-icon { font-size: 2.4rem; margin-bottom: 1rem; }
+    .fact-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .fact-card p  { color: var(--text-dim); font-size: 0.93rem; }
+
+    /* ─── Habitat split ─────────────────────────────────── */
+    #lebensraum { background: var(--ocean-deep); }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    @media (max-width: 768px) {
+      .split { grid-template-columns: 1fr; gap: 2rem; }
+    }
+    .ocean-visual {
+      position: relative;
+      height: 340px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #00284d 0%, #001533 40%, #000a1a 100%);
+      border: 1px solid rgba(100, 255, 218, 0.12);
+    }
+    .ocean-layer {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 55%;
+      background: linear-gradient(180deg, rgba(0,60,100,0.3) 0%, rgba(0,20,50,0.8) 100%);
+    }
+    .seabed {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: linear-gradient(180deg, #1a0a00 0%, #0d0500 100%);
+      border-radius: 50% 50% 0 0 / 20px 20px 0 0;
+    }
+    .coral {
+      position: absolute;
+      bottom: 55px;
+      font-size: 2.2rem;
+    }
+    /* coral nth-child indices relative to .ocean-visual children:
+       1=depth-labels, 2=ocean-layer, 3-5=fish, 6=seabed, 7-10=corals */
+    .coral:nth-child(7)  { left: 8%; }
+    .coral:nth-child(8)  { left: 28%; font-size: 2.8rem; }
+    .coral:nth-child(9)  { right: 22%; }
+    .coral:nth-child(10) { right: 6%; font-size: 1.8rem; }
+    .fish {
+      position: absolute;
+      font-size: 1.4rem;
+      animation: swim var(--sw) linear infinite;
+    }
+    @keyframes swim {
+      0%   { left: -10%; opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { left: 110%;  opacity: 0; }
+    }
+    .fish:nth-child(3) { top: 20%; --sw: 9s;  animation-delay: 0s;  }
+    .fish:nth-child(4) { top: 38%; --sw: 13s; animation-delay: 4s;  }
+    .fish:nth-child(5) { top: 55%; --sw: 11s; animation-delay: 7s;  }
+    .seabed-octopus {
+      position: absolute;
+      bottom: 58px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2.8rem;
+      animation: float 4s ease-in-out infinite;
+    }
+    .depth-labels {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .depth-label {
+      background: rgba(100, 255, 218, 0.1);
+      border: 1px solid rgba(100, 255, 218, 0.2);
+      color: var(--accent);
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    /* ─── Stats strip ───────────────────────────────────── */
+    #zahlen { background: var(--ocean-light); }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      text-align: center;
+    }
+    .stat { padding: 1.5rem; }
+    .stat-num {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label { color: var(--text-dim); font-size: 0.9rem; margin-top: 0.4rem; }
+
+    /* ─── Gallery cards ─────────────────────────────────── */
+    #galerie { background: var(--ocean-mid); }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.8rem;
+      margin-top: 3rem;
+    }
+    .gcard {
+      background: var(--ocean-light);
+      border: 1px solid rgba(100, 255, 218, 0.08);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .gcard:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .gcard-img {
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+      background: radial-gradient(circle, rgba(155,93,229,0.2) 0%, transparent 70%);
+    }
+    .gcard-body { padding: 1.5rem; }
+    .gcard-body h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
+    .gcard-body p  { color: var(--text-dim); font-size: 0.9rem; }
+    .tag {
+      display: inline-block;
+      background: rgba(100, 255, 218, 0.1);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 2px 12px;
+      font-size: 0.75rem;
+      margin-bottom: 0.7rem;
+    }
+
+    /* ─── Footer ────────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      background: var(--ocean-deep);
+      border-top: 1px solid rgba(100, 255, 218, 0.08);
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer .footer-emoji { font-size: 1.6rem; display: block; margin-bottom: 0.5rem; }
+
+    .accent-strong { color: var(--accent); }
+    .habitat-list  { color: var(--text-dim); margin-top: .8rem; padding-left: 1.5rem; }
+    .section-centered { text-align: center; }
+    .divider-centered  { margin: 0 auto 3rem; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Animated bubbles -->
+  <div class="bubbles" id="bubbles"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-logo">🐙 <span>Oktopus</span>Atlantik</div>
+    <ul class="nav-links">
+      <li><a href="#fakten">Fakten</a></li>
+      <li><a href="#lebensraum">Lebensraum</a></li>
+      <li><a href="#zahlen">Zahlen</a></li>
+      <li><a href="#galerie">Galerie</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="octopus-wrap">
+      <div class="octopus">
+        <div class="oct-head">
+          <div class="oct-eye left"></div>
+          <div class="oct-eye right"></div>
+          <div class="oct-mouth"></div>
+        </div>
+        <div class="tentacles">
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+          <div class="tentacle"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-label">Tiefen des Atlantiks</p>
+    <h1>Das Wunder des<br><em>Atlantischen Oktopus</em></h1>
+    <p class="subtitle">Entdecke das geheimnisvolle Leben des intelligentesten Meerestiers im Atlantischen Ozean – Meister der Tarnung, der Problemlösung und des Überlebens.</p>
+    <a href="#fakten" class="btn">Mehr entdecken ↓</a>
+  </header>
+
+  <!-- Facts -->
+  <section id="fakten">
+    <div class="container">
+      <p class="section-label reveal">Biologie &amp; Verhalten</p>
+      <h2 class="section-title reveal">Faszinierende <span>Fakten</span></h2>
+      <div class="divider reveal"></div>
+      <div class="facts-grid">
+        <div class="fact-card reveal">
+          <div class="fact-icon">🧠</div>
+          <h3>Hochintelligent</h3>
+          <p>Oktopusse besitzen ca. 500 Millionen Neuronen – mehr als jedes andere wirbellose Tier. Sie lösen Rätsel, öffnen Gläser und erkennen menschliche Gesichter.</p>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon">🎨</div>
+          <h3>Meister der Tarnung</h3>
+          <p>In weniger als einer Sekunde können sie Farbe, Textur und Muster ihrer Haut verändern – obwohl sie farbenblind sind, täuschen sie ihre Feinde perfekt.</p>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon">💉</div>
+          <h3>Drei Herzen</h3>
+          <p>Zwei Kiemenherzen pumpen Blut durch die Kiemen, das dritte Systemherz versorgt den Körper. Ihr Blut ist blau, da es Hämocyanin statt Hämoglobin enthält.</p>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon">🦾</div>
+          <h3>Acht Arme</h3>
+          <p>Jeder der acht Arme hat sein eigenes Nervensystem und kann eigenständig agieren. Bis zu 240 Saugnäpfe pro Arm ermöglichen enormen Halt und Tastsinn.</p>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon">🖋️</div>
+          <h3>Tintenwolke</h3>
+          <p>Bei Gefahr sprühen sie eine Tintenwolke aus, die Räuber vorübergehend blind und desorientiert macht, während der Oktopus flieht.</p>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon">🔄</div>
+          <h3>Regeneration</h3>
+          <p>Verlorene Arme wachsen vollständig nach, inklusive Nervensystem und Saugnäpfen – ein echtes Wunder der Natur.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Habitat -->
+  <section id="lebensraum">
+    <div class="container">
+      <p class="section-label reveal">Ökologie</p>
+      <h2 class="section-title reveal">Lebensraum im <span>Atlantik</span></h2>
+      <div class="divider reveal"></div>
+      <div class="split">
+        <div>
+          <p class="section-body reveal">Der Atlantische Ozean bietet dem Gemeinen Oktopus (<em>Octopus vulgaris</em>) ideale Lebensbedingungen. Von den flachen Küstenriffen vor Portugal bis zu den dunklen Tiefen des offenen Ozeans – Oktopusse bewohnen nahezu alle Zonen.</p>
+          <br>
+          <p class="section-body reveal">Sie bevorzugen felsige Böden, Korallenriffe und Seegraswiesen zwischen <strong class="accent-strong">0 und 200 Meter</strong> Tiefe. Ihr Territorium verteidigen sie aktiv und kehren täglich zu ihrer Höhle zurück.</p>
+          <br>
+          <p class="section-body reveal">Im Atlantik heimisch sind unter anderem:</p>
+          <ul class="habitat-list reveal">
+            <li><em>Octopus vulgaris</em> – Gemeiner Oktopus</li>
+            <li><em>Eledone cirrhosa</em> – Moschuskrake</li>
+            <li><em>Octopus defilippi</em> – Atlantischer Oktopus</li>
+          </ul>
+        </div>
+        <div class="ocean-visual reveal">
+          <div class="depth-labels">
+            <span class="depth-label">0–50 m · Epipelagial</span>
+            <span class="depth-label">50–200 m · Mesopelagial</span>
+          </div>
+          <div class="ocean-layer"></div>
+          <!-- fish -->
+          <div class="fish">🐟</div>
+          <div class="fish">🐠</div>
+          <div class="fish">🦈</div>
+          <div class="seabed"></div>
+          <div class="coral">🌿</div>
+          <div class="coral">🪸</div>
+          <div class="coral">🪸</div>
+          <div class="coral">🌿</div>
+          <!-- mini octopus on seabed -->
+          <div class="seabed-octopus">🐙</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section id="zahlen">
+    <div class="container">
+      <p class="section-label section-centered reveal">Beeindruckende Zahlen</p>
+      <h2 class="section-title section-centered reveal">Oktopus in <span>Zahlen</span></h2>
+      <div class="divider divider-centered reveal"></div>
+      <div class="stats-row">
+        <div class="stat reveal">
+          <div class="stat-num">8</div>
+          <div class="stat-label">Arme mit je bis zu 240 Saugnäpfen</div>
+        </div>
+        <div class="stat reveal">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Herzen & blaues Blut</div>
+        </div>
+        <div class="stat reveal">
+          <div class="stat-num">90%</div>
+          <div class="stat-label">des Körpers ist Weichteil – kein Skelett</div>
+        </div>
+        <div class="stat reveal">
+          <div class="stat-num">500M</div>
+          <div class="stat-label">Neuronen im Nervensystem</div>
+        </div>
+        <div class="stat reveal">
+          <div class="stat-num">1–2J</div>
+          <div class="stat-label">durchschnittliche Lebensdauer</div>
+        </div>
+        <div class="stat reveal">
+          <div class="stat-num">0,3s</div>
+          <div class="stat-label">für einen vollständigen Farbwechsel</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="galerie">
+    <div class="container">
+      <p class="section-label reveal">Entdecke mehr</p>
+      <h2 class="section-title reveal">Themen-<span>Galerie</span></h2>
+      <div class="divider reveal"></div>
+      <div class="gallery-grid">
+        <div class="gcard reveal">
+          <div class="gcard-img">🦑</div>
+          <div class="gcard-body">
+            <span class="tag">Jagd</span>
+            <h3>Perfekter Räuber</h3>
+            <p>Oktopusse jagen Krabben, Garnelen und Fische. Sie lauern im Verborgenen und schlagen blitzschnell zu, bevor sie ihr Gift einsetzen, um die Beute zu lähmen.</p>
+          </div>
+        </div>
+        <div class="gcard reveal">
+          <div class="gcard-img">🥚</div>
+          <div class="gcard-body">
+            <span class="tag">Fortpflanzung</span>
+            <h3>Aufopferungsvolle Mutter</h3>
+            <p>Ein Weibchen bewacht bis zu 200 000 Eier wochenlang ohne zu fressen – kurz nach dem Schlüpfen der Jungtiere stirbt die Mutter erschöpft.</p>
+          </div>
+        </div>
+        <div class="gcard reveal">
+          <div class="gcard-img">🔬</div>
+          <div class="gcard-body">
+            <span class="tag">Wissenschaft</span>
+            <h3>Im Fokus der Forschung</h3>
+            <p>Wissenschaftler untersuchen das Oktopus-Gehirn für die KI-Forschung. Ihre dezentralisierte Intelligenz könnte die Robotik revolutionieren.</p>
+          </div>
+        </div>
+        <div class="gcard reveal">
+          <div class="gcard-img">🌊</div>
+          <div class="gcard-body">
+            <span class="tag">Klimawandel</span>
+            <h3>Gewinner des Klimawandels?</h3>
+            <p>Studien zeigen, dass sich Oktopuspopulationen trotz steigender Meerestemperaturen gut anpassen. Sie gelten als potenzielle „Gewinner" des Klimawandels im Ozean.</p>
+          </div>
+        </div>
+        <div class="gcard reveal">
+          <div class="gcard-img">💊</div>
+          <div class="gcard-body">
+            <span class="tag">Medizin</span>
+            <h3>Medizinische Bedeutung</h3>
+            <p>Das Oktopus-Gift enthält Substanzen, die in der Schmerzforschung und Krebstherapie untersucht werden. Die Bionik lernt von ihren Saugnäpfen.</p>
+          </div>
+        </div>
+        <div class="gcard reveal">
+          <div class="gcard-img">🏛️</div>
+          <div class="gcard-body">
+            <span class="tag">Kultur</span>
+            <h3>In Kunst &amp; Mythologie</h3>
+            <p>Von der griechischen Skylla bis zum nordischen Kraken – Oktopusse faszinieren Kulturen seit Jahrtausenden. Heute sind sie Popkultur-Ikonen.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <span class="footer-emoji">🐙</span>
+    Schulprojekt &mdash; <strong>Oktopus im Atlantik</strong> &nbsp;|&nbsp;
+    Informatik &nbsp;|&nbsp; <a href="https://github.com/Benjamin1808/Informatik">GitHub</a>
+  </footer>
+
+  <script>
+    /* Bubbles */
+    const container = document.getElementById('bubbles');
+    for (let i = 0; i < 28; i++) {
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      const size = 6 + Math.random() * 22;
+      b.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random() * 100}%;
+        animation-duration:${8 + Math.random() * 18}s;
+        animation-delay:${Math.random() * 15}s;
+      `;
+      container.appendChild(b);
+    }
+
+    /* Scroll reveal */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
